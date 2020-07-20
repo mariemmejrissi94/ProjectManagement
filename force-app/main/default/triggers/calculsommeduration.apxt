@@ -1,0 +1,43 @@
+trigger calculsommeduration on temp_soustache__c (after insert,after delete, after update,after undelete) {
+     set<id> ids=new set<id>();
+    
+    if(Trigger.isInsert || Trigger.isUndelete)
+    {
+     for(temp_soustache__c tmp: trigger.new)
+    {
+       ids.add(tmp.SouTache__c); 
+    }   
+    }
+     if(Trigger.isDelete)
+    {
+     for(temp_soustache__c tmp: trigger.old)
+    {
+       ids.add(tmp.SouTache__c); 
+    }   
+    }
+     if(Trigger.isUpdate)
+    {
+     for(temp_soustache__c tmp: trigger.new)
+    {
+        if(Trigger.oldmap.get(tmp.Id).duration__c != tmp.duration__c)
+       ids.add(tmp.SouTache__c); 
+    }   
+    }   
+
+    List<SouTache__c> SouTacheList=new List<SouTache__c>();
+    Map<ID,SouTache__c > souTacheMap = new Map<ID, SouTache__c>([select id,total_soutache__c FROM SouTache__c where id IN: ids]);
+    AggregateResult[] groupedResults = [SELECT SouTache__c,SUM(duration__c) durationsum FROM temp_soustache__c WHERE SouTache__c in:ids group by SouTache__c];
+
+    for(AggregateResult Results: groupedResults){
+      
+         Id soutacheId =(id) Results.get('SouTache__c');         
+         SouTache__c souTache =souTacheMap.get(soutacheId);
+         soutache.total_soutache__c=(Decimal)Results.get('durationsum');
+        system.debug('soutache++ '+soutache);
+         SouTacheList.add(soutache);
+    }   
+
+       update SouTacheList; 
+
+
+}

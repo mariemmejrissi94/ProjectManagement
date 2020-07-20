@@ -1,0 +1,19 @@
+trigger deleteSprints on Projet__c (before delete) {
+    Set<Id> projectIds = new Set<Id>();
+    Set<Id> sprintIds = new Set<Id>();
+    Set<Id> userStoryIds = new Set<Id>();
+    Set<Id> taskIds = new Set<Id>();
+    for(Projet__c projObj : trigger.Old){
+        projectIds.add(projObj.Id);
+    }
+    
+    
+    List<Sprint__c> sprintList=[select Id from Sprint__c where Projet__c in :projectIds];
+    for(Sprint__c sprintObj :sprintList)
+    {
+        sprintIds.add(sprintObj.Id);
+    }
+    
+    Delete sprintList;
+    
+}
